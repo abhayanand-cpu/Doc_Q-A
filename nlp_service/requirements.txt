@@ -1,0 +1,7 @@
+mkdir nlp_service
+cd nlp_service
+python3 -m venv venv
+source venv/bin/activate
+
+# Install FastAPI and NLP libraries
+pip install fastapi uvicorn langchain llama-index PyMuPDF

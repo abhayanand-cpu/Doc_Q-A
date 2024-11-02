@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDF Upload and Real-time Q&A</title>
+</head>
+<body>
+  <h1>PDF Upload and Real-time Q&A</h1>
+
+  <section>
+    <h2>Upload PDF</h2>
+    <form id="uploadForm" enctype="multipart/form-data">
+      <input type="file" id="pdfInput" name="pdf" accept="application/pdf" required>
+      <button type="button" onclick="uploadPDF()">Upload</button>
+    </form>
+    <p id="uploadMessage"></p>
+  </section>
+
+  <section id="qaSection" style="display:none;">
+    <h2>Ask a Question</h2>
+    <input type="text" id="questionInput" placeholder="Type your question here">
+    <button onclick="askQuestion()">Ask</button>
+    <div id="responses"></div>
+  </section>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    let docId;
+    let socket;
+
+    async function uploadPDF() {
+      const pdfInput = document.getElementById("pdfInput").files[0];
+      const formData = new FormData();
+      formData.append("pdf", pdfInput);
+
+      const response = await fetch("/upload", { method: "POST", body: formData });
+
+      if (response.ok) {
+        const data = await response.json();
+        docId = data.docId;
+        document.getElementById("uploadMessage").textContent = "PDF uploaded and processed! Document ID: " + docId;
+        document.getElementById("qaSection").style.display = "block";
+        initWebSocket();
+      } else {
+        document.getElementById("uploadMessage").textContent = "Failed to upload PDF.";
+      }
+    }
+
+    function initWebSocket() {
+      socket = io();
+      socket.emit("setDocId", docId);
+
+      socket.on("answer", (data) => {
+        const responses = document.getElementById("responses");
+        const responseElement = document.createElement("p");
+        responseElement.textContent = "Answer: " + data.answer;
+        responses.appendChild(responseElement);
+      });
+
+      socket.on("error", (error) => {
+        const responses = document.getElementById("responses");
+        const errorElement = document.createElement("p");
+        errorElement.textContent = "Error: " + error.message;
+        responses.appendChild(errorElement);
+      });
+    }
+
+    function askQuestion() {
+      const question = document.getElementById("questionInput").value;
+      if (socket && docId && question) {
+        socket.emit("question", question);
+        document.getElementById("questionInput").value = "";
+      } else {
+        alert("Please upload a PDF and enter a question.");
+      }
+    }
+  </script>
+</body>
+</html>

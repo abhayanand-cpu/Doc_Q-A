@@ -1,0 +1,11 @@
+{
+  "name": "pdf_program",
+  "version": "1.0.0",
+  "description": "upload pdf document and ask questions about content of the document",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Abhayanand Siddharth",
+  "license": "ISC"
+}
